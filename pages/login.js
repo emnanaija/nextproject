@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';  // Importer useRouter pour la redirection
 import Image from 'next/image';
 
 export default function Login() {
@@ -6,6 +7,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState({});  // Pour stocker les erreurs par champ
+  const router = useRouter();  // Initialiser useRouter pour la redirection
 
   const handleLoginChange = (e) => {
     setLogin(e.target.value);
@@ -33,13 +35,12 @@ export default function Login() {
       const data = await response.json();
 
       if (response.status === 400) {
-        // Afficher les erreurs de validation
         setErrors(data.errors);
       } else if (response.status === 401) {
-        // Afficher le message en cas de login ou mot de passe incorrect
         setMessage(data.message);
       } else if (response.status === 200) {
         setMessage(data.message);
+        router.push('/home');  // Rediriger vers la page d'accueil après connexion réussie
       }
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire :', error);
@@ -66,7 +67,6 @@ export default function Login() {
           />
         </div>
 
-        {/* Affichage des erreurs API */}
         {message && (
           <p className="text-red-500 text-sm mb-4 text-center">{message}</p>
         )}
