@@ -7,7 +7,8 @@ export default async function handler(req, res) {
     const { login, password } = req.body;
 
     try {
-      const query = 'SELECT * FROM utilisateurs WHERE login = $1 AND password = $2';
+      // Utilisation de crypt() dans la requête SQL pour comparer le mot de passe entré avec le mot de passe haché
+      const query = `SELECT * FROM utilisateurs WHERE login = $1 AND password = crypt($2, password)`;
       const values = [login, password];
       const result = await db.query(query, values);
 
