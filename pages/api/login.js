@@ -1,10 +1,26 @@
 import db from '../../lib/db';
+import { z } from 'zod';
+
+// Schéma de validation avec Zod
+const schema = z.object({
+  login: z.string().nonempty({ message: 'Le login ne peut pas être vide' }).regex(/^[a-zA-Z]+$/, 'Le login doit contenir uniquement des lettres'),
+  password: z.string().nonempty({ message: 'Le mot de passe ne peut pas être vide' }),
+});
 
 export default async function handler(req, res) {
   const { method } = req;
 
   if (method === 'POST') {
     const { login, password } = req.body;
+
+    // Validation de la saisie avec Zod
+    const validationResult = schema.safeParse({ login, password });
+
+    if (!validationResult.success) {
+      // Si la validation échoue, retourne les messages d'erreur
+      const errors = validationResult.error.errors.map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
 
     try {
       // Utilisation de crypt() dans la requête SQL pour comparer le mot de passe entré avec le mot de passe haché

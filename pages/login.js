@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import Image from 'next/image';  // Import du module Image
 
 export default function Login() {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState([]); // Nouvel état pour stocker les erreurs
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors([]); // Réinitialiser les erreurs à chaque soumission
 
     try {
       const response = await fetch('/api/login', {
@@ -19,9 +20,19 @@ export default function Login() {
       });
 
       const data = await response.json();
-      setMessage(data.message);
+
+      if (response.status === 400) {
+        // Si la validation échoue, afficher les erreurs
+        setErrors(data.errors);
+      } else if (response.status === 200) {
+        // Si la connexion réussit, afficher un message de succès
+        setMessage(data.message);
+      } else {
+        // Si c'est un autre type d'erreur, afficher le message du serveur
+        setMessage(data.message);
+      }
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error('Erreur lors de la soumission du formulaire:', error);
     }
   };
 
@@ -35,17 +46,17 @@ export default function Login() {
       <div className="bg-white bg-opacity-90 p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 className="text-3xl font-semibold text-center mb-6 text-gray-800">Welcome to NUMERYX</h2>
 
-        {/* Utilisation de la balise Image de Next.js */}
-        <div className="flex justify-center mb-6">
-          <Image 
-            src="/assets/logo.jpg"  // Assurez-vous que le logo est dans /public/assets/
-            alt="Numeryx Logo" 
-            width={80}  // Largeur de l'image
-            height={80}  // Hauteur de l'image
-          />
-        </div>
-
         {message && <p className="mb-4 text-center text-red-500">{message}</p>}
+
+        {/* Affichage des erreurs */}
+        {errors.length > 0 && (
+          <div className="mb-4">
+            {errors.map((error, index) => (
+              <p key={index} className="text-red-500 text-sm">{error}</p>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="login">
