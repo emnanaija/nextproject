@@ -3,8 +3,13 @@ import { z } from 'zod';
 
 // Schéma de validation avec Zod
 const schema = z.object({
-  login: z.string().nonempty({ message: 'Le login ne peut pas être vide' }).regex(/^[a-zA-Z]+$/, 'Le login doit contenir uniquement des lettres'),
-  password: z.string().nonempty({ message: 'Le mot de passe ne peut pas être vide' }),
+  login: z
+    .string()
+    .nonempty({ message: 'Le login ne peut pas être vide' })
+    .regex(/^[a-zA-Z]+$/, 'Le login doit contenir uniquement des lettres'),
+  password: z
+    .string()
+    .nonempty({ message: 'Le mot de passe ne peut pas être vide' }),
 });
 
 export default async function handler(req, res) {
@@ -17,8 +22,11 @@ export default async function handler(req, res) {
     const validationResult = schema.safeParse({ login, password });
 
     if (!validationResult.success) {
-      // Si la validation échoue, retourne les messages d'erreur
-      const errors = validationResult.error.errors.map((err) => err.message);
+      // Si la validation échoue, retourner un objet d'erreurs au frontend
+      const errors = validationResult.error.errors.reduce((acc, err) => {
+        acc[err.path[0]] = err.message;
+        return acc;
+      }, {});
       return res.status(400).json({ errors });
     }
 
@@ -30,17 +38,17 @@ export default async function handler(req, res) {
 
       if (result.rows.length > 0) {
         // Utilisateur trouvé
-        res.status(200).json({ message: 'Connexion réussie!' });
+        return res.status(200).json({ message: 'Connexion réussie!' });
       } else {
         // Utilisateur non trouvé
-        res.status(401).json({ message: 'Login ou mot de passe incorrect' });
+        return res.status(401).json({ message: 'Login ou mot de passe incorrect' });
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Erreur du serveur' });
+      return res.status(500).json({ message: 'Erreur du serveur' });
     }
   } else {
     res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${method} Not Allowed`);
+    return res.status(405).end(`Method ${method} Not Allowed`);
   }
 }
